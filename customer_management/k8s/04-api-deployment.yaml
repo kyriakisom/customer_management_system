@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customer-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: customer-api
+  template:
+    metadata:
+      labels:
+        app: customer-api
+    spec:
+      containers:
+        - name: customer-api
+          image: customer-api:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: MongoDbSettings__ConnectionString
+              valueFrom:
+                configMapKeyRef:
+                  name: api-config
+                  key: MONGO_CONNECTION_STRING
+            - name: MongoDbSettings__DatabaseName
+              valueFrom:
+                configMapKeyRef:
+                  name: api-config
+                  key: MONGO_DB_NAME
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"

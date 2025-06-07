@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+data:
+  MONGO_DB_NAME: customerdb
+  MONGO_CONNECTION_STRING: mongodb://admin:secret123@mongo-0.mongo-headless.default.svc.cluster.local:27017
