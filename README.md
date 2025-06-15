@@ -41,7 +41,11 @@ cd customer_management
 dotnet build dotnet.sln
 dotnet run 
 
-The API should be accessible at https://localhost:5001 or http://localhost:5000
+🧪 Testing
+You can use Postman for your tests, with that address:
+https://localhost:5001 or http://localhost:5000
+
+The API should be also accessible at https://localhost:5001 or http://localhost:5000
 🐳 Using Docker Compose
 cd customer_management
 docker-compose up --build
