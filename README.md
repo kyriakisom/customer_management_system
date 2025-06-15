@@ -29,7 +29,3 @@ mongodb://admin:supersecret@localhost:27017
 🛑 Stopping the Application
 To stop the running containers, use the following command:
 docker-compose down
-
-📝 Notes
-- Do NOT upload the `.env` file to GitHub or any public repository.
-- Make sure to update the Docker image and Kubernetes manifests if you change the project structure.
