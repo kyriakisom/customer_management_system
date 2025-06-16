@@ -1,47 +1,60 @@
-apiVersion: apps/v1
-kind: StatefulSet
+apiVersion: apps/v1  # API version for workload resources like StatefulSet
+kind: StatefulSet   # StatefulSet manages stateful applications with stable network IDs and persistent storage
+
 metadata:
-  name: mongo
+  name: mongo       # Name of the StatefulSet resource
+
 spec:
-  serviceName: mongo-headless
-  replicas: 1
+  serviceName: mongo-headless  # Headless service name used for stable network identity of pods
+  replicas: 1                  # Number of pod replicas; here just one MongoDB instance
+
   selector:
     matchLabels:
-      app: mongo
+      app: mongo               # Label selector to identify pods managed by this StatefulSet
+
   template:
     metadata:
       labels:
-        app: mongo
+        app: mongo             # Labels assigned to each pod, must match selector above
+
     spec:
       containers:
         - name: mongo
-          image: mongo:6
+          image: mongo:6        # MongoDB Docker image version 6
           ports:
-            - containerPort: 27017
+            - containerPort: 27017  # MongoDB default port
+
           env:
+            # Root username environment variable, sourced securely from Kubernetes Secret
             - name: MONGO_INITDB_ROOT_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: mongo-secret
+                  name: mongo-secret    # Reference to the Secret holding MongoDB username/password
                   key: MONGO_USER
+
+            # Root password environment variable, sourced securely from Kubernetes Secret
             - name: MONGO_INITDB_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: mongo-secret
                   key: MONGO_PASSWORD
+
+            # Initial database name environment variable, sourced from ConfigMap
             - name: MONGO_INITDB_DATABASE
               valueFrom:
                 configMapKeyRef:
-                  name: api-config
-                  key: MONGO_DB_NAME
+                  name: api-config        # ConfigMap containing non-sensitive config values
+                  key: MONGO_DB_NAME     # Database name key
+
           volumeMounts:
             - name: mongo-data
-              mountPath: /data/db
+              mountPath: /data/db    # Mount path inside the container where MongoDB stores its data
+
   volumeClaimTemplates:
     - metadata:
-        name: mongo-data
+        name: mongo-data          # Name of the persistent volume claim template
       spec:
-        accessModes: ["ReadWriteOnce"]
+        accessModes: ["ReadWriteOnce"]  # Volume can be mounted as read/write by a single node
         resources:
           requests:
-            storage: 1Gi
+            storage: 1Gi          # Request 1GiB of persistent storage per pod
