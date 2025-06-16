@@ -1,19 +1,41 @@
+# Use the official .NET 9.0 SDK image as the build environment
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+
+# Set the working directory inside the container
 WORKDIR /app
 
+# Copy solution file to the working directory
 COPY *.sln ./
+
+# Copy the project file(s) for the CustomerApi project
 COPY CustomerApi/*.csproj ./CustomerApi/
+
+# Restore the NuGet dependencies based on the copied project files
 RUN dotnet restore
 
+# Copy all source files from CustomerApi directory into the container
 COPY CustomerApi/. ./CustomerApi/
+
+# Change directory to the CustomerApi project folder
 WORKDIR /app/CustomerApi
+
+# Publish the project in Release configuration to the 'out' folder
 RUN dotnet publish -c Release -o out
 
+# Use the official ASP.NET Core runtime image for the final lightweight image
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
+
+# Set the working directory in the runtime image
 WORKDIR /app
+
+# Copy the published output from the build stage into the runtime image
 COPY --from=build /app/CustomerApi/out .
 
+# Set environment variable to listen on port 80 for HTTP requests
 ENV ASPNETCORE_URLS=http://+:80
+
+# Expose port 80 to allow traffic into the container
 EXPOSE 80
 
+# Define the entry point to run the application
 ENTRYPOINT ["dotnet", "CustomerApi.dll"]
