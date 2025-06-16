@@ -1,11 +1,16 @@
-apiVersion: v1
-kind: Service
+apiVersion: v1             # API version for core Kubernetes resources like Service
+kind: Service              # Service resource exposes a set of Pods as a network service
+
 metadata:
-  name: mongo
+  name: mongo              # Name of the Service resource
+
 spec:
-  type: ClusterIP
+  type: ClusterIP          # Service type: ClusterIP exposes the service on a cluster-internal IP
+                           # This means the service is reachable only within the cluster
+
   selector:
-    app: mongo
+    app: mongo             # Selects pods with label 'app: mongo' to route traffic to
+
   ports:
-    - port: 27017
-      targetPort: 27017
+    - port: 27017          # Port that the service will expose inside the cluster
+      targetPort: 27017    # Port on the pod that the service forwards traffic to (MongoDB default port)
