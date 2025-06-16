@@ -1,60 +1,63 @@
-version: '3.8'
+version: '3.8'  # Compose file version
 
 services:
-  api:
+  api:  # The API service running your CustomerApi app
     build:
-      context: .
-      dockerfile: CustomerApi/Dockerfile
-    image: customer-api:latest
+      context: .  # Build context is the current directory
+      dockerfile: CustomerApi/Dockerfile  # Dockerfile location for the API service
+    image: customer-api:latest  # Name/tag for the built image
     ports:
-      - "8080:80"
+      - "8080:80"  # Map host port 8080 to container port 80 (default HTTP port)
     environment:
+      # Environment variables for MongoDB connection inside the API container
       - MongoDbSettings__ConnectionString=mongodb://mongo:27017
       - MongoDbSettings__DatabaseName=customerdb
     depends_on:
-      mongo:
+      mongo:  # This service depends on mongo service being healthy before starting
         condition: service_healthy
-    restart: unless-stopped
+    restart: unless-stopped  # Restart container unless explicitly stopped
     deploy:
       restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
-        window: 120s
+        condition: on-failure  # Restart only on failures
+        delay: 5s  # Wait 5 seconds before restarting
+        max_attempts: 3  # Try restarting max 3 times
+        window: 120s  # Time window for max restart attempts
       resources:
         limits:
-          cpus: '0.50'
-          memory: 512M
+          cpus: '0.50'  # Limit CPU usage to 50%
+          memory: 512M  # Limit memory usage to 512 MB
         reservations:
-          cpus: '0.25'
-          memory: 256M
+          cpus: '0.25'  # Reserve 25% CPU for this container
+          memory: 256M  # Reserve 256 MB RAM
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]  # Command to check MongoDB connectivity inside container (may be misplaced here for API)
     volumes:
-      - app_data:/app/data
+      - app_data:/app/data  # Persist data in named volume 'app_data' mapped to /app/data inside container
     networks:
-      - backend_net
+      - backend_net  # Attach this service to the backend_net network
 
-  mongo:
-    image: mongo:6
+  mongo:  # MongoDB service
+    image: mongo:6  # Use official MongoDB version 6 image
     ports:
-      - "27017:27017"
+      - "27017:27017"  # Map host port 27017 to container port 27017 (default MongoDB port)
     environment:
-      MONGO_INITDB_DATABASE: customerdb
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: customerdb  # Initial database created on startup
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}  # Root username from environment variable (from .env file)
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}  # Root password from environment variable (from .env file)
     volumes:
-      - mongo_data:/data/db
-    restart: unless-stopped
+      - mongo_data:/data/db  # Persist MongoDB data in volume 'mongo_data'
+    restart: unless-stopped  # Restart container unless explicitly stopped
     healthcheck:
-      test: ["CMD", "true"]
+      test: ["CMD", "true"]  # Dummy healthcheck (always true) — consider improving for real Mongo health check
     networks:
-      - backend_net
+      - backend_net  # Attach this service to the backend_net network
 
+# Named volumes to persist data beyond container lifecycle
 volumes:
   mongo_data:
   app_data:
 
+# Custom bridge network for backend services communication
 networks:
   backend_net:
     driver: bridge
