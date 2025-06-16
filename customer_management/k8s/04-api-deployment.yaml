@@ -1,49 +1,63 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: apps/v1  # API version for workload resources like Deployment
+kind: Deployment     # Deployment manages stateless applications and rolling updates
+
 metadata:
-  name: customer-api
+  name: customer-api  # Name of the Deployment resource
+
 spec:
-  replicas: 1
+  replicas: 1         # Number of pod replicas to run
+
   selector:
     matchLabels:
-      app: customer-api
+      app: customer-api  # Label selector to identify pods managed by this Deployment
+
   template:
     metadata:
       labels:
-        app: customer-api
+        app: customer-api  # Labels assigned to each pod, must match selector above
+
     spec:
       containers:
         - name: customer-api
-          image: customer-api:latest
+          image: customer-api:latest  # Docker image for the customer API application
+
           ports:
-            - containerPort: 80
+            - containerPort: 80  # Container port exposed by the application (HTTP)
+
           env:
+            # Inject MongoDB connection string from ConfigMap (non-sensitive data)
             - name: MongoDbSettings__ConnectionString
               valueFrom:
                 configMapKeyRef:
                   name: api-config
                   key: MONGO_CONNECTION_STRING
+
+            # Inject MongoDB database name from ConfigMap
             - name: MongoDbSettings__DatabaseName
               valueFrom:
                 configMapKeyRef:
                   name: api-config
                   key: MONGO_DB_NAME
+
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health     # Endpoint to check if the container is alive
               port: 80
-            initialDelaySeconds: 10
-            periodSeconds: 10
+            initialDelaySeconds: 10  # Wait 10 seconds before first probe after container starts
+            periodSeconds: 10        # Probe every 10 seconds
+
           readinessProbe:
             httpGet:
-              path: /health
+              path: /health     # Endpoint to check if the container is ready to serve traffic
               port: 80
-            initialDelaySeconds: 5
-            periodSeconds: 5
+            initialDelaySeconds: 5   # Wait 5 seconds before first readiness probe
+            periodSeconds: 5         # Probe every 5 seconds
+
           resources:
-            requests:
+            requests:               # Minimum resource requests reserved for this container
               memory: "128Mi"
-              cpu: "250m"
-            limits:
+              cpu: "250m"           # 250 millicores (0.25 CPU)
+
+            limits:                 # Maximum resource limits for this container
               memory: "512Mi"
-              cpu: "500m"
+              cpu: "500m"           # 500 millicores (0.5 CPU)
